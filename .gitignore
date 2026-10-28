@@ -6,6 +6,7 @@
 # Source code
 !/.gitignore
 !/README.md
+!/LICENSE
 !/requirements.txt
 !/app.py
 !/app_core.py

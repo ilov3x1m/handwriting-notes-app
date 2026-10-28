@@ -111,7 +111,6 @@ The blank template page for punctuation looks like this:
 - Text inside pictures, charts and SmartArt is not extracted. There is no OCR, so scanned PDFs cannot be read.
 - Tuned for the reMarkable 2 (447 x 596 pt pages). Other devices need a new device profile in `config.py`.
 - Handwritten punctuation works only for profiles made from the four-page template.
-- No license has been chosen yet.
 
 ## Possible future work
 
@@ -119,3 +118,22 @@ The blank template page for punctuation looks like this:
 - More PDF exporters and layouts tested.
 - Other device profiles.
 - Optional OCR for image-only slides.
+
+## License
+
+This project is open source under the [MIT License](LICENSE). You may use, copy, modify and redistribute the code, including for commercial purposes, as long as you keep the copyright and license notice.
+
+The MIT License covers this project's own code only. The libraries it depends on keep their own licenses (installed versions checked with `pip`):
+
+| Library | License |
+|---|---|
+| ReportLab | BSD |
+| Pillow | MIT-CMU |
+| NumPy | BSD-3-Clause |
+| python-pptx | MIT |
+| Streamlit | Apache-2.0 |
+| PyMuPDF | AGPL-3.0, or a paid commercial license from Artifex |
+
+PyMuPDF is the one to note: its AGPL terms apply when you distribute the combined application or offer it to others over a network. If that is your plan, review the [PyMuPDF licensing](https://pymupdf.readthedocs.io/en/latest/about.html#license-and-copyright) or obtain a commercial license. This is a summary, not legal advice.
+
+Your own handwriting samples, completed templates and notes are not part of this repository and remain yours.
