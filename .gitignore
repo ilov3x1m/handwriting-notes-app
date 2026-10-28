@@ -1,0 +1,46 @@
+# Allowlist: everything is ignored unless it is listed below. This keeps personal handwriting data
+# (glyphs/, samples/, slides_in/, output/, completed templates, uploaded files) out of the repository
+# even when a new file is created by accident.
+/*
+
+# Source code
+!/.gitignore
+!/README.md
+!/requirements.txt
+!/app.py
+!/app_core.py
+!/config.py
+!/contact_sheet.py
+!/extract.py
+!/preview.py
+!/render.py
+!/slides.py
+!/slides_pdf.py
+!/spacing.py
+!/spacing_preview.py
+!/template.py
+!/icon.png
+
+# Blank (unfilled) templates and their layouts
+!/template.pdf
+!/template_layout.json
+!/templates/
+/templates/*
+!/templates/v1/
+!/templates/v2/
+
+# Streamlit settings (localhost only, upload limit, theme)
+!/.streamlit/
+/.streamlit/*
+!/.streamlit/config.toml
+
+# Tests (synthetic fixtures only) and documentation images
+!/tests/
+/tests/*
+!/tests/*.py
+!/docs/
+/docs/*
+!/docs/images/
+
+__pycache__/
+.DS_Store

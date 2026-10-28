@@ -1,0 +1,45 @@
+[server]
+maxUploadSize = 50
+# Only this computer can open the app (the default would also serve it to your whole network).
+address = "localhost"
+
+[browser]
+# Do not send anything to Streamlit's servers.
+gatherUsageStats = false
+
+[client]
+# Hide the "Deploy" button: this app runs on your computer only.
+toolbarMode = "minimal"
+
+# Notebook-inspired theme: warm paper, ink-blue accent. Streamlit follows the browser's light/dark setting.
+[theme]
+base = "light"
+font = "sans serif"
+baseRadius = "0.5rem"
+linkColor = "#2C4A7C"
+
+[theme.light]
+backgroundColor = "#FAF8F3"
+secondaryBackgroundColor = "#F0EDE4"
+textColor = "#1E2A3A"
+primaryColor = "#2C4A7C"
+borderColor = "#D8D3C6"
+# Alerts: amber warnings, green success, red only for real errors.
+orangeColor = "#B26A00"
+yellowColor = "#B26A00"
+greenColor = "#2E7D46"
+redColor = "#B3261E"
+blueColor = "#2C4A7C"
+
+[theme.dark]
+backgroundColor = "#14171C"
+secondaryBackgroundColor = "#1E232B"
+textColor = "#EDEBE6"
+primaryColor = "#9DB9F2"
+linkColor = "#9DB9F2"
+borderColor = "#323944"
+orangeColor = "#F2B84B"
+yellowColor = "#F2B84B"
+greenColor = "#6FCB8A"
+redColor = "#FF8A80"
+blueColor = "#9DB9F2"
