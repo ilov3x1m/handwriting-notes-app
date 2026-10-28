@@ -192,6 +192,7 @@ TRIM_PADDING_PX = 4
 # tablet should return the size unchanged, so anything bigger means the
 # crop boxes would no longer line up.
 PAGE_SIZE_TOLERANCE_PT = 0.5
+PAGE_ALIGN_MIN_SCORE = 0.95     # share of the blank template's printed lines that must be found when trimming an oversized page
 
 # ---------------------------------------------------------------------------
 # Spacing analysis (spacing.py)

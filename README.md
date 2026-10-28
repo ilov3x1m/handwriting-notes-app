@@ -14,6 +14,7 @@ It started as an accessibility project: a tool for students who cannot easily wr
 - **Slide text extraction.** Reads `.pptx` files directly. Reads text-based PDFs by inferring titles, bullets and indentation from the layout.
 - **Handwritten rendering.** Writes text onto ruled pages with random glyph choice, small size and angle variation, baseline correction, handwritten punctuation, bullets and indentation. A fixed seed gives the same pages every time.
 - **Streamlit app.** Upload slides, check and edit the extracted text, generate the PDF, preview it and download it. A second screen creates new handwriting profiles from a completed template.
+- **Tolerant of reMarkable exports.** If the tablet grows a page's bounds because of a stray mark outside the page, the page is trimmed back to the template area in memory, but only when the printed boxes provably line up there. Otherwise the app explains how to export again. Your uploaded file is never modified.
 - **Safe by design.** The app runs only on `localhost`, limits uploads to 50 MB, works in temporary folders, never overwrites an existing profile, and keeps your edits when you switch screens.
 
 An older, three-page template (V1, letters and digits only) is still supported. Profiles made from it use a plain built-in font for punctuation.
@@ -82,7 +83,7 @@ python render.py --text "Hello, world!" --user yourname
 python -m unittest discover -s tests
 ```
 
-The suite has 365 tests. Tests that need real handwriting data or a real slide deck are skipped automatically when those files are not present (19 are skipped on a fresh clone). All other tests use generated synthetic inputs.
+The suite has 376 tests. On the author's machine, with private handwriting data and a real slide deck available, all 376 run and pass. On a fresh clone of this repository, 357 run and pass and 19 are skipped, because they need private files (a real handwriting profile, a completed reMarkable PDF and a real deck) that are deliberately not published. Everything else uses generated synthetic inputs, including the tests for the expanded-page export fix.
 
 ## Project layout
 

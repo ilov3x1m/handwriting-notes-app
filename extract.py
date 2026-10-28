@@ -99,25 +99,84 @@ def open_pdf(path):
         raise ExtractError(f"Could not open {path} as a PDF: {error}")
 
 
+def reference_render(layout, page_number, scale):
+    """Grayscale render of one page of the BLANK template made from `layout` (for aligning exports)."""
+    import tempfile
+    import numpy
+    import template
+    with tempfile.TemporaryDirectory() as folder:
+        path = os.path.join(folder, "blank.pdf")
+        template.write_pdf(layout, path)
+        with pymupdf.open(path) as blank:
+            return gray_array(blank[page_number - 1], scale, numpy)
+
+
+def gray_array(page, scale, numpy):
+    pixmap = page.get_pixmap(matrix=pymupdf.Matrix(scale, scale), colorspace=pymupdf.csGRAY, alpha=False)
+    return numpy.frombuffer(pixmap.samples, dtype=numpy.uint8).reshape(pixmap.height, pixmap.width)
+
+
+def trim_oversized_page(page, info, layout):
+    """Cut an expanded page back to the template area, or return None if that cannot be done safely.
+
+    The reMarkable grows a page's bounds when ink is drawn outside it (a stray mark). The original page
+    stays at the PDF's user-space origin, so the template area is (0, 0)-(width, height) in that space.
+    That is only accepted if the printed boxes and guides of the blank template really line up there
+    (checked against a render of the blank template), so a different or shifted layout is never cropped
+    blindly. Only the in-memory page is changed; the uploaded file is never written.
+    """
+    import numpy
+    width, height = info["width"], info["height"]
+    box = page.mediabox                                   # PDF coordinates, y up
+    if box.x0 > 0.01 or box.y0 > 0.01 or box.x1 < width - 0.01 or box.y1 < height - 0.01:
+        return None                                       # the template area is not inside the page bounds
+    page.set_cropbox(pymupdf.Rect(0, box.y1 - height, width, box.y1))   # y measured down from the top of the bounds
+    scale = 2
+    reference = reference_render(layout, info["page"], scale) < 250      # where the template prints lines
+    found = gray_array(page, scale, numpy)
+    rows, cols = min(found.shape[0], reference.shape[0]), min(found.shape[1], reference.shape[1])
+    if abs(found.shape[0] - reference.shape[0]) > 1 or abs(found.shape[1] - reference.shape[1]) > 1:
+        return None
+    wanted = reference[:rows, :cols]
+    score = float((found[:rows, :cols][wanted] < 250).mean())
+    return score if score >= config.PAGE_ALIGN_MIN_SCORE else None
+
+
 def validate_pdf(document, layout):
-    """Check the PDF has the pages and page sizes the layout was made for."""
+    """Check the PDF has the pages and page sizes the layout was made for.
+
+    A page that is larger than the template only because of expanded bounds is trimmed back in memory
+    when its printed template provably lines up. Returns a list of plain-language notes about that.
+    """
     expected_pages = len(layout["pages"])
     if document.page_count != expected_pages:
         raise ExtractError(
             f"PDF has {document.page_count} pages but this template version "
             f"(V{layout['meta'].get('template_version', 1)}) expects {expected_pages}"
         )
+    notes = []
     for info in layout["pages"]:
         page = document[info["page"] - 1]
-        width, height = page.rect.width, page.rect.height
-        tolerance = config.PAGE_SIZE_TOLERANCE_PT
-        if abs(width - info["width"]) > tolerance or abs(height - info["height"]) > tolerance:
-            raise ExtractError(
-                f"Page {info['page']} is {width:.1f} x {height:.1f} pt but the layout expects "
-                f"{info['width']} x {info['height']} pt. The crop boxes would not line up."
-            )
         if page.rotation != 0:
             raise ExtractError(f"Page {info['page']} is rotated {page.rotation} degrees")
+        width, height = page.rect.width, page.rect.height
+        tolerance = config.PAGE_SIZE_TOLERANCE_PT
+        if abs(width - info["width"]) <= tolerance and abs(height - info["height"]) <= tolerance:
+            continue
+        size = f"Page {info['page']} is {width:.1f} x {height:.1f} pt but the template page is {info['width']:g} x {info['height']:g} pt."
+        if width < info["width"] - tolerance or height < info["height"] - tolerance:
+            raise ExtractError(size + " It is smaller than the template, so the crop boxes would not line up. "
+                               "Upload the PDF exported from the downloaded template at its original size.")
+        if trim_oversized_page(page, info, layout) is None:
+            raise ExtractError(
+                size + " It is larger than the template, probably because something was written outside the page, "
+                "and the printed boxes could not be located inside it, so the crop boxes would not line up. "
+                "Export the PDF again from the reMarkable after removing any marks outside the page, "
+                "and make sure the file was made from the template you downloaded here.")
+        notes.append(f"Page {info['page']} was {width:.1f} x {height:.1f} pt (probably a mark outside the page). "
+                     f"It was trimmed back to the template area of {info['width']:g} x {info['height']:g} pt, "
+                     "and the printed boxes lined up. Your original file was not changed.")
+    return notes
 
 
 # ---------------------------------------------------------------------------
@@ -325,8 +384,9 @@ def extract_to_directory(pdf_path, layout_path, out_dir, source_label=None):
     """
     document = open_pdf(pdf_path)
     layout = load_layout(layout_path or layout_path_for_pdf(document))
-    validate_pdf(document, layout)
+    notes = validate_pdf(document, layout)
     glyphs, missing, warnings = extract_all(document, layout)
+    warnings = notes + warnings
     metadata = save_results(glyphs, missing, layout, source_label or pdf_path, out_dir)
     return metadata, warnings
 
